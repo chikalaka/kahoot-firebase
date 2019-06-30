@@ -32,6 +32,7 @@ function App() {
   const user = useRealtimeValue(userRef);
   const quiz = useRealtimeValue(quizRef);
 
+
   if (!quiz)
     return <Welcome {...user} onInputChange={e => setInput(e.target.value)} />;
 
@@ -147,6 +148,7 @@ const Results = ({ activeUsers = [], questions = [], onNext, isEOG }) => {
       <div className="page">
         <div className="title">The Winners</div>
         <div className="winners">
+
           <div className="winner">
             <div>{second.name}</div>
             <div className="second-winner">{second.score}</div>
