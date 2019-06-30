@@ -32,7 +32,6 @@ function App() {
   const user = useRealtimeValue(userRef);
   const quiz = useRealtimeValue(quizRef);
 
-
   if (!quiz)
     return <Welcome {...user} onInputChange={e => setInput(e.target.value)} />;
 
@@ -141,29 +140,10 @@ const Results = ({ activeUsers = [], questions = [], onNext, isEOG }) => {
     .reverse()
     .slice(0, 10);
 
-  const [first = {}, second = {}, third = {}] = topUsers;
+  const [first, second, third] = topUsers;
 
   if (isEOG) {
-    return (
-      <div className="page">
-        <div className="title">The Winners</div>
-        <div className="winners">
-
-          <div className="winner">
-            <div>{second.name}</div>
-            <div className="second-winner">{second.score}</div>
-          </div>
-          <div className="winner">
-            <div>{first.name}</div>
-            <div className="first-winner">{first.score}</div>
-          </div>
-          <div className="winner">
-            <div>{third.name}</div>
-            <div className="third-winner">{third.score}</div>
-          </div>
-        </div>
-      </div>
-    );
+    return <Winners {...{ first, second, third }} />;
   }
 
   return (
@@ -182,6 +162,26 @@ const Results = ({ activeUsers = [], questions = [], onNext, isEOG }) => {
     </div>
   );
 };
+
+const Winners = ({ first = {}, second = {}, third = {} }) => (
+  <div className="page">
+    <div className="title">The Winners</div>
+    <div className="winners">
+      <div className="winner">
+        <div>{second.name}</div>
+        <div className="second-winner">{second.score}</div>
+      </div>
+      <div className="winner">
+        <div>{first.name}</div>
+        <div className="first-winner">{first.score}</div>
+      </div>
+      <div className="winner">
+        <div>{third.name}</div>
+        <div className="third-winner">{third.score}</div>
+      </div>
+    </div>
+  </div>
+);
 
 const Waiting = ({ onBegin }) => {
   return (
