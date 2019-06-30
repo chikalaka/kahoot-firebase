@@ -1,17 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
-import { useObjectVal, useObject } from "react-firebase-hooks/database";
 import firebase from "firebase";
 import _ from "lodash";
-
-// const useObjectWithKey = ref => {
-//   const [snapshot, ...rest] = useObject(ref);
-
-//   const val = snapshot && snapshot.val && snapshot.val();
-//   const key = snapshot && snapshot.key;
-
-//   return [key && val && { key, ...val }, ...rest];
-// };
 
 const useRealtimeValue = query => {
   const [value, setValue] = useState();
@@ -20,7 +10,6 @@ const useRealtimeValue = query => {
   useEffect(() => {
     query &&
       query.on("value", snapshot => {
-        console.log("here");
         const value = snapshot.val();
         const key = snapshot.key;
         setValue(value);
@@ -43,40 +32,39 @@ function App() {
   const user = useRealtimeValue(userRef);
   const quiz = useRealtimeValue(quizRef);
 
-  if (quiz) {
-    quizRef
-      .child("activeUsers")
-      .child(user.key)
-      .set(user);
+  if (!quiz)
+    return <Welcome {...user} onInputChange={e => setInput(e.target.value)} />;
 
-    if (quiz.showResults) {
-      const onNext = () => {
-        quizRef.child("showResults").set(false);
-        quizRef.child("questionsCount").set(quiz.questionsCount + 1);
-      };
-      const isEOG = quiz.questionsCount + 1 === quiz.questions.length;
-      return <Results {...quiz} onNext={onNext} isEOG={isEOG} />;
-    }
-    if (quiz.isWaiting)
-      return <Waiting onBegin={() => quizRef.child("isWaiting").set(false)} />;
+  quizRef
+    .child("activeUsers")
+    .child(user.key)
+    .set(user);
 
-    const questionRef = quizRef.child("questions").child(quiz.questionsCount);
-    const onDone = () => {
-      quizRef.child("showResults").set(true);
+  if (quiz.showResults) {
+    const onNext = () => {
+      quizRef.child("showResults").set(false);
+      quizRef.child("questionsCount").set(quiz.questionsCount + 1);
     };
-    return (
-      <Question
-        {...{
-          onDone,
-          questionRef,
-          user,
-          ...quiz.questions[quiz.questionsCount]
-        }}
-      />
-    );
+    const isEOG = quiz.questionsCount + 1 === quiz.questions.length;
+    return <Results {...quiz} onNext={onNext} isEOG={isEOG} />;
   }
+  if (quiz.isWaiting)
+    return <Waiting onBegin={() => quizRef.child("isWaiting").set(false)} />;
 
-  return <Welcome {...user} onInputChange={e => setInput(e.target.value)} />;
+  const questionRef = quizRef.child("questions").child(quiz.questionsCount);
+  const onDone = () => {
+    quizRef.child("showResults").set(true);
+  };
+  return (
+    <Question
+      {...{
+        onDone,
+        questionRef,
+        user,
+        ...quiz.questions[quiz.questionsCount]
+      }}
+    />
+  );
 }
 
 const Welcome = ({ name, onInputChange }) => {
@@ -159,14 +147,17 @@ const Results = ({ activeUsers = [], questions = [], onNext, isEOG }) => {
       <div className="page">
         <div className="title">The Winners</div>
         <div className="winners">
-          <div className="second-winner winner">
-            {second.name}: {second.score}
+          <div className="winner">
+            <div>{second.name}</div>
+            <div className="second-winner">{second.score}</div>
           </div>
-          <div className="first-winner winner">
-            {first.name}: {first.score}
+          <div className="winner">
+            <div>{first.name}</div>
+            <div className="first-winner">{first.score}</div>
           </div>
-          <div className="third-winner winner">
-            {third.name}: {third.score}
+          <div className="winner">
+            <div>{third.name}</div>
+            <div className="third-winner">{third.score}</div>
           </div>
         </div>
       </div>

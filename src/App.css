@@ -74,3 +74,33 @@
   top: 0;
   right: 15px;
 }
+
+.winners {
+  display: flex;
+  margin-top: 50px;
+  justify-content: flex-end;
+  align-items: flex-end;
+}
+
+.winner {
+  margin:2px;
+  justify-content: flex-end;
+  display: flex;
+  flex-direction: column;
+  width: 200px;
+}
+
+.first-winner {
+  height: 200px;
+  background: #fcc201;
+}
+
+.second-winner {
+  height: 150px;
+  background: #d7d7d7;
+}
+
+.third-winner {
+  height: 100px;
+  background: #965a38;
+}
