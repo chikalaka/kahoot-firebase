@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import firebase from "firebase";
 import _ from "lodash";
+import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
+import * as firebaseui from "firebaseui";
 
 const useRealtimeValue = query => {
   const [value, setValue] = useState();
@@ -21,19 +23,67 @@ const useRealtimeValue = query => {
 
 const IS_ADMIN = true;
 
-const userId = _.random(1, 4);
+const uiConfig = {
+  signInFlow: "popup",
+  signInOptions: [
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+    firebase.auth.EmailAuthProvider.PROVIDER_ID,
+    firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID,
+    firebase.auth.PhoneAuthProvider.PROVIDER_ID
+  ],
+  callbacks: {
+    signInSuccessWithAuthResult: () => false
+  }
+};
 
 function App() {
   const [input, setInput] = useState("");
+  const [user, setUser] = useState(null);
+  // console.log("user", user);
 
-  const userRef = firebase.database().ref("users/" + userId);
+  useEffect(() => {
+    const unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
+      // console.log("onAuthStateChanged", user);
+      const { uid, displayName, phoneNumber } = user || {};
+      const name =
+        displayName || (phoneNumber && phoneNumber.slice(-6)) || uid.slice(-6);
+
+      if (user) {
+        setUser({
+          name,
+          key: uid
+        });
+      }
+    });
+    return () => unregisterAuthObserver();
+  }, []);
+
   const quizRef = input && firebase.database().ref(input);
-
-  const user = useRealtimeValue(userRef);
   const quiz = useRealtimeValue(quizRef);
 
+  if (!user)
+    return (
+      <div className="page">
+        <StyledFirebaseAuth
+          uiConfig={uiConfig}
+          firebaseAuth={firebase.auth()}
+        />
+      </div>
+    );
+
+  const onSignOut = () => {
+    firebase.auth().signOut();
+    setUser(null);
+  };
+
   if (!quiz)
-    return <Welcome {...user} onInputChange={e => setInput(e.target.value)} />;
+    return (
+      <Welcome
+        {...user}
+        onInputChange={e => setInput(e.target.value)}
+        onSignOut={onSignOut}
+      />
+    );
 
   quizRef
     .child("activeUsers")
@@ -67,11 +117,14 @@ function App() {
   );
 }
 
-const Welcome = ({ name, onInputChange }) => {
+const Welcome = ({ name, onInputChange, onSignOut }) => {
   return (
     <div className="page">
       <div className="title">Hi {name}</div>
       <input onChange={onInputChange} placeholder="Game PIN" />
+      <a className="admin-button" onClick={onSignOut}>
+        Sign-out
+      </a>
     </div>
   );
 };

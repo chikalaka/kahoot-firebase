@@ -4,10 +4,12 @@
   "private": true,
   "dependencies": {
     "firebase": "^6.2.2",
+    "firebaseui": "^4.0.0",
     "lodash": "^4.17.11",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "react-firebase-hooks": "^2.0.0",
+    "react-firebaseui": "^3.1.2",
     "react-scripts": "3.0.1"
   },
   "scripts": {
