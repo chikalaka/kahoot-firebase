@@ -32,36 +32,33 @@ function App() {
   const user = useRealtimeValue(userRef);
   const quiz = useRealtimeValue(quizRef);
 
+  if (quiz) {
+    quizRef
+      .child("activeUsers")
+      .child(user.key)
+      .set(user);
+  }
+
+
   if (!quiz)
     return <Welcome {...user} onInputChange={e => setInput(e.target.value)} />;
 
-  quizRef
-    .child("activeUsers")
-    .child(user.key)
-    .set(user);
+  const { showResults, questions, questionsCount, isWaiting } = quiz
 
-  if (quiz.showResults) {
-    const onNext = () => {
-      quizRef.child("showResults").set(false);
-      quizRef.child("questionsCount").set(quiz.questionsCount + 1);
-    };
-    const isEOG = quiz.questionsCount + 1 === quiz.questions.length;
-    return <Results {...quiz} onNext={onNext} isEOG={isEOG} />;
+  if (showResults) {
+    const isEOG = questionsCount + 1 === questions.length;
+    return <Results {...quiz} isEOG={isEOG} />;
   }
-  if (quiz.isWaiting)
-    return <Waiting onBegin={() => quizRef.child("isWaiting").set(false)} />;
+  if (isWaiting)
+    return <Waiting />;
 
-  const questionRef = quizRef.child("questions").child(quiz.questionsCount);
-  const onDone = () => {
-    quizRef.child("showResults").set(true);
-  };
+  const questionRef = quizRef.child("questions").child(questionsCount);
   return (
     <Question
       {...{
-        onDone,
         questionRef,
         user,
-        ...quiz.questions[quiz.questionsCount]
+        ...questions[questionsCount]
       }}
     />
   );
@@ -99,11 +96,6 @@ const Question = ({
 
   return (
     <div className="page">
-      {IS_ADMIN && (
-        <div className="admin-button done" onClick={onDone}>
-          Done
-        </div>
-      )}
       <div className="title">{title}</div>
       <div className="question">{body}</div>
       <div className="answers">
@@ -125,7 +117,6 @@ const Question = ({
 };
 
 const Results = ({ activeUsers = [], questions = [], onNext, isEOG }) => {
-  console.log(activeUsers);
   const users = _.map(_.filter(activeUsers, v => v), (user = {}) => {
     const scores = _.map(questions, ({ answered, rightAnswer }) => {
       if (_.get(answered, [user.key, "answer"]) === rightAnswer) {
@@ -154,11 +145,6 @@ const Results = ({ activeUsers = [], questions = [], onNext, isEOG }) => {
           {user.name}: {user.score}
         </div>
       ))}
-      {IS_ADMIN && (
-        <div className="admin-button" onClick={onNext}>
-          Next
-        </div>
-      )}
     </div>
   );
 };
@@ -183,15 +169,10 @@ const Winners = ({ first = {}, second = {}, third = {} }) => (
   </div>
 );
 
-const Waiting = ({ onBegin }) => {
+const Waiting = () => {
   return (
     <div className="page">
       <div>Waiting for other players</div>
-      {IS_ADMIN && (
-        <div className="admin-button" onClick={onBegin}>
-          Let's Begin
-        </div>
-      )}
     </div>
   );
 };
