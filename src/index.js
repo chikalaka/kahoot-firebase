@@ -5,7 +5,7 @@ import App from "./App";
 import * as serviceWorker from "./serviceWorker";
 import firebase from "firebase";
 
-var firebaseConfig = {
+const firebaseConfig = {
   apiKey: "AIzaSyBca-Bcu8EdAUO-B7N6KqiYwEtTLh4UCFE",
   authDomain: "kahoot-fac46.firebaseapp.com",
   databaseURL: "https://kahoot-fac46.firebaseio.com",

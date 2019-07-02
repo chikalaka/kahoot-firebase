@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import firebase from "firebase";
 import _ from "lodash";
+import StyledFirebaseAuth from "react-firebaseui/StyledFirebaseAuth";
+import * as firebaseui from "firebaseui";
 
 const useRealtimeValue = query => {
   const [value, setValue] = useState();
@@ -19,18 +21,49 @@ const useRealtimeValue = query => {
   return key && value && { ...value, key };
 };
 
-const IS_ADMIN = true;
-
-const userId = _.random(1, 4);
+const uiConfig = {
+  signInFlow: "popup",
+  signInOptions: [
+    firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+    firebase.auth.EmailAuthProvider.PROVIDER_ID,
+    firebaseui.auth.AnonymousAuthProvider.PROVIDER_ID,
+    firebase.auth.PhoneAuthProvider.PROVIDER_ID
+  ],
+  callbacks: {
+    signInSuccessWithAuthResult: () => false
+  }
+};
 
 function App() {
   const [input, setInput] = useState("");
+  const [user, setUser] = useState(null);
 
-  const userRef = firebase.database().ref("users/" + userId);
+  useEffect(() => {
+    const unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        const { uid, displayName, phoneNumber } = user;
+        const name = displayName || (phoneNumber && phoneNumber.slice(-6)) || (uid && uid.slice(-6));
+        setUser({
+          name,
+          key: uid
+        });
+      }
+    });
+    return () => unregisterAuthObserver();
+  }, []);
+
   const quizRef = input && firebase.database().ref(input);
-
-  const user = useRealtimeValue(userRef);
   const quiz = useRealtimeValue(quizRef);
+
+  if (!user)
+    return (
+      <div className="page">
+        <StyledFirebaseAuth
+          uiConfig={uiConfig}
+          firebaseAuth={firebase.auth()}
+        />
+      </div>
+    );
 
   if (quiz) {
     quizRef
@@ -39,14 +72,18 @@ function App() {
       .set(user);
   }
 
-
-  if (!quiz)
-    return <Welcome {...user} onInputChange={e => setInput(e.target.value)} />;
+  if (!quiz) {
+    const onSignOut = () => {
+      firebase.auth().signOut();
+      setUser(null);
+    };
+    return <Welcome {...user} onInputChange={e => setInput(e.target.value)} onSignOut={onSignOut}/>;
+  }
 
   const { showResults, questions, questionsCount, isWaiting } = quiz
 
   if (showResults) {
-    const isEOG = questionsCount + 1 === questions.length;
+    const isEOG = questionsCount + 1 > questions.length;
     return <Results {...quiz} isEOG={isEOG} />;
   }
   if (isWaiting)
@@ -64,11 +101,14 @@ function App() {
   );
 }
 
-const Welcome = ({ name, onInputChange }) => {
+const Welcome = ({ name, onInputChange, onSignOut }) => {
   return (
     <div className="page">
       <div className="title">Hi {name}</div>
       <input onChange={onInputChange} placeholder="Game PIN" />
+      {/*<a className="admin-button" onClick={onSignOut}>*/}
+      {/*  Sign-out*/}
+      {/*</a>*/}
     </div>
   );
 };
@@ -79,8 +119,7 @@ const Question = ({
   body,
   answers = [],
   answered,
-  user = {},
-  onDone
+  user = {}
 }) => {
   const [selected, setSelected] = useState();
   const setAnswered = answer => {
@@ -116,8 +155,8 @@ const Question = ({
   );
 };
 
-const Results = ({ activeUsers = [], questions = [], onNext, isEOG }) => {
-  const users = _.map(_.filter(activeUsers, v => v), (user = {}) => {
+const getTopUsers = (users, questions) => {
+  const usersWithScore = _.map(_.filter(users, v => v), (user = {}) => {
     const scores = _.map(questions, ({ answered, rightAnswer }) => {
       if (_.get(answered, [user.key, "answer"]) === rightAnswer) {
         return 1000;
@@ -127,10 +166,13 @@ const Results = ({ activeUsers = [], questions = [], onNext, isEOG }) => {
     const sum = scores.reduce((acc, val) => acc + val, 0);
     return { ...user, score: sum };
   });
-  const topUsers = _.sortBy(users, "score")
+  return _.sortBy(usersWithScore, "score")
     .reverse()
     .slice(0, 10);
+}
 
+const Results = ({ activeUsers = [], questions = [], isEOG }) => {
+  const topUsers = getTopUsers(activeUsers, questions)
   const [first, second, third] = topUsers;
 
   if (isEOG) {
