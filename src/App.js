@@ -39,15 +39,18 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    const unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
-      if (user) {
-        const { uid, displayName, phoneNumber } = user;
-        const name = displayName || (phoneNumber && phoneNumber.slice(-6)) || (uid && uid.slice(-6));
-        setUser({
-          name,
-          key: uid
-        });
-      }
+    const unregisterAuthObserver = firebase.auth().onAuthStateChanged(
+      user => {
+        if (user) {
+          const { uid, displayName, phoneNumber } = user;
+          const name = displayName ||
+            (phoneNumber && phoneNumber.slice(-6)) ||
+            (uid && uid.slice(-6));
+          setUser({
+            name,
+            key: uid
+          });
+        }
     });
     return () => unregisterAuthObserver();
   }, []);
@@ -157,12 +160,9 @@ const Question = ({
 
 const getTopUsers = (users, questions) => {
   const usersWithScore = _.map(_.filter(users, v => v), (user = {}) => {
-    const scores = _.map(questions, ({ answered, rightAnswer }) => {
-      if (_.get(answered, [user.key, "answer"]) === rightAnswer) {
-        return 1000;
-      }
-      return 0;
-    });
+    const scores = _.map(questions, ({ answered, rightAnswer }) =>
+      _.get(answered, [user.key, "answer"]) === rightAnswer ? 1000 : 0
+    );
     const sum = scores.reduce((acc, val) => acc + val, 0);
     return { ...user, score: sum };
   });
