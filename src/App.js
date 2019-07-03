@@ -21,8 +21,6 @@ const useRealtimeValue = query => {
   return key && value && { ...value, key };
 };
 
-const IS_ADMIN = true;
-
 const uiConfig = {
   signInFlow: "popup",
   signInOptions: [
@@ -39,21 +37,20 @@ const uiConfig = {
 function App() {
   const [input, setInput] = useState("");
   const [user, setUser] = useState(null);
-  // console.log("user", user);
 
   useEffect(() => {
-    const unregisterAuthObserver = firebase.auth().onAuthStateChanged(user => {
-      // console.log("onAuthStateChanged", user);
-      const { uid, displayName, phoneNumber } = user || {};
-      const name =
-        displayName || (phoneNumber && phoneNumber.slice(-6)) || uid.slice(-6);
-
-      if (user) {
-        setUser({
-          name,
-          key: uid
-        });
-      }
+    const unregisterAuthObserver = firebase.auth().onAuthStateChanged(
+      user => {
+        if (user) {
+          const { uid, displayName, phoneNumber } = user;
+          const name = displayName ||
+            (phoneNumber && phoneNumber.slice(-6)) ||
+            (uid && uid.slice(-6));
+          setUser({
+            name,
+            key: uid
+          });
+        }
     });
     return () => unregisterAuthObserver();
   }, []);
@@ -71,47 +68,37 @@ function App() {
       </div>
     );
 
-  const onSignOut = () => {
-    firebase.auth().signOut();
-    setUser(null);
-  };
-
-  if (!quiz)
-    return (
-      <Welcome
-        {...user}
-        onInputChange={e => setInput(e.target.value)}
-        onSignOut={onSignOut}
-      />
-    );
-
-  quizRef
-    .child("activeUsers")
-    .child(user.key)
-    .set(user);
-
-  if (quiz.showResults) {
-    const onNext = () => {
-      quizRef.child("showResults").set(false);
-      quizRef.child("questionsCount").set(quiz.questionsCount + 1);
-    };
-    const isEOG = quiz.questionsCount + 1 === quiz.questions.length;
-    return <Results {...quiz} onNext={onNext} isEOG={isEOG} />;
+  if (quiz) {
+    quizRef
+      .child("activeUsers")
+      .child(user.key)
+      .set(user);
   }
-  if (quiz.isWaiting)
-    return <Waiting onBegin={() => quizRef.child("isWaiting").set(false)} />;
 
-  const questionRef = quizRef.child("questions").child(quiz.questionsCount);
-  const onDone = () => {
-    quizRef.child("showResults").set(true);
-  };
+  if (!quiz) {
+    const onSignOut = () => {
+      firebase.auth().signOut();
+      setUser(null);
+    };
+    return <Welcome {...user} onInputChange={e => setInput(e.target.value)} onSignOut={onSignOut}/>;
+  }
+
+  const { showResults, questions, questionsCount, isWaiting } = quiz
+
+  if (showResults) {
+    const isEOG = questionsCount + 1 > questions.length;
+    return <Results {...quiz} isEOG={isEOG} />;
+  }
+  if (isWaiting)
+    return <Waiting />;
+
+  const questionRef = quizRef.child("questions").child(questionsCount);
   return (
     <Question
       {...{
-        onDone,
         questionRef,
         user,
-        ...quiz.questions[quiz.questionsCount]
+        ...questions[questionsCount]
       }}
     />
   );
@@ -122,9 +109,9 @@ const Welcome = ({ name, onInputChange, onSignOut }) => {
     <div className="page">
       <div className="title">Hi {name}</div>
       <input onChange={onInputChange} placeholder="Game PIN" />
-      <a className="admin-button" onClick={onSignOut}>
-        Sign-out
-      </a>
+      {/*<a className="admin-button" onClick={onSignOut}>*/}
+      {/*  Sign-out*/}
+      {/*</a>*/}
     </div>
   );
 };
@@ -135,8 +122,7 @@ const Question = ({
   body,
   answers = [],
   answered,
-  user = {},
-  onDone
+  user = {}
 }) => {
   const [selected, setSelected] = useState();
   const setAnswered = answer => {
@@ -152,11 +138,6 @@ const Question = ({
 
   return (
     <div className="page">
-      {IS_ADMIN && (
-        <div className="admin-button done" onClick={onDone}>
-          Done
-        </div>
-      )}
       <div className="title">{title}</div>
       <div className="question">{body}</div>
       <div className="answers">
@@ -177,22 +158,21 @@ const Question = ({
   );
 };
 
-const Results = ({ activeUsers = [], questions = [], onNext, isEOG }) => {
-  console.log(activeUsers);
-  const users = _.map(_.filter(activeUsers, v => v), (user = {}) => {
-    const scores = _.map(questions, ({ answered, rightAnswer }) => {
-      if (_.get(answered, [user.key, "answer"]) === rightAnswer) {
-        return 1000;
-      }
-      return 0;
-    });
+const getTopUsers = (users, questions) => {
+  const usersWithScore = _.map(_.filter(users, v => v), (user = {}) => {
+    const scores = _.map(questions, ({ answered, rightAnswer }) =>
+      _.get(answered, [user.key, "answer"]) === rightAnswer ? 1000 : 0
+    );
     const sum = scores.reduce((acc, val) => acc + val, 0);
     return { ...user, score: sum };
   });
-  const topUsers = _.sortBy(users, "score")
+  return _.sortBy(usersWithScore, "score")
     .reverse()
     .slice(0, 10);
+}
 
+const Results = ({ activeUsers = [], questions = [], isEOG }) => {
+  const topUsers = getTopUsers(activeUsers, questions)
   const [first, second, third] = topUsers;
 
   if (isEOG) {
@@ -207,11 +187,6 @@ const Results = ({ activeUsers = [], questions = [], onNext, isEOG }) => {
           {user.name}: {user.score}
         </div>
       ))}
-      {IS_ADMIN && (
-        <div className="admin-button" onClick={onNext}>
-          Next
-        </div>
-      )}
     </div>
   );
 };
@@ -236,15 +211,10 @@ const Winners = ({ first = {}, second = {}, third = {} }) => (
   </div>
 );
 
-const Waiting = ({ onBegin }) => {
+const Waiting = () => {
   return (
     <div className="page">
       <div>Waiting for other players</div>
-      {IS_ADMIN && (
-        <div className="admin-button" onClick={onBegin}>
-          Let's Begin
-        </div>
-      )}
     </div>
   );
 };
