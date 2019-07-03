@@ -6,32 +6,73 @@
     "activeUsers": {},
     "questions": [
       {
-        "answers": ["Answer 1", "Answer 2", "Answer 3", "Answer 4"],
-        "body": "This is the body of the question",
-        "title": "Question 1",
+        "answers": [
+          "You just made it up",
+          "Donald Norman",
+          "Jakob Nielsen",
+          "Jared Spool"
+        ],
+        "body": "Who first coined the term 'User Experience'?",
+        "title": "UX",
         "answered": {},
         "rightAnswer": 1
       },
       {
-        "answers": ["Answer 1", "Answer 2", "Answer 3", "Answer 4"],
-        "body": "This is the body of the question",
-        "title": "Question 2",
+        "answers": [
+          "model, view, command",
+          "mongo, vue, controller",
+          "none of these",
+          "model, view, controller"
+        ],
+        "body": "What does MVC stand for?",
+        "title": "Programmer",
+        "answered": {},
+        "rightAnswer": 3
+      },
+      {
+        "answers": ["Both React and Angular", "Angular", "React", "Mongo"],
+        "body": "Which one of these is the 'view'?",
+        "title": "Frontend",
+        "answered": {},
+        "rightAnswer": 0
+      },
+      {
+        "answers": [
+          "Save the Pixel",
+          "Tailored to be Free",
+          "Apple - Sround the Clock",
+          "Rock Their World"
+        ],
+        "body": "Which book will you recommend to your UI/UX colleague?",
+        "title": "UI/UX",
         "answered": {},
         "rightAnswer": 1
       },
       {
-        "answers": ["Answer 1", "Answer 2", "Answer 3", "Answer 4"],
-        "body": "This is the body of the question",
-        "title": "Question 3",
+        "answers": ["Rolls-Royce", "Jaguar", "Porche", "Bentley"],
+        "body": "Which high-end car brand announced its first fully electric car, named Taycan?",
+        "title": "Tech",
         "answered": {},
-        "rightAnswer": 1
+        "rightAnswer": 2
       },
       {
-        "answers": ["Answer 1", "Answer 2", "Answer 3", "Answer 4"],
-        "body": "This is the body of the question",
-        "title": "Question 4",
+        "answers": ["Role", "Team", "Culture", "Merchandise"],
+        "body": "DevOps is a",
+        "title": "DevOps",
         "answered": {},
-        "rightAnswer": 1
+        "rightAnswer": 0
+      },
+      {
+        "answers": [
+          "Project Lead, Scrum Master, Developer",
+          "Product Owner, Scrum Master",
+          "Developer, Team Lead, Scrum Master",
+          "Scrum Master, Product Owner, Developer"
+        ],
+        "body": "Which roles are there in a Scrum team?",
+        "title": "Scrum",
+        "answered": {},
+        "rightAnswer": 3
       }
     ]
   }
