@@ -25,6 +25,7 @@
 
 .answers {
   display: grid;
+    grid-auto-rows: 1fr;
   grid-gap: 15px;
   grid-template-columns: 1fr 1fr;
   width: 100%;
@@ -33,6 +34,10 @@
 .answer {
   cursor: pointer;
   border-radius: 6px;
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .answer0 {
@@ -87,7 +92,7 @@
   justify-content: flex-end;
   display: flex;
   flex-direction: column;
-  width: 200px;
+  width: 20vw;
 }
 
 .first-winner {
@@ -103,4 +108,14 @@
 .third-winner {
   height: 100px;
   background: #965a38;
+}
+
+.highlight {
+    color: orange;
+}
+
+.sign-out {
+    position: absolute;
+    top: 0;
+    right: 0;
 }

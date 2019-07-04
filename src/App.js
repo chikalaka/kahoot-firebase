@@ -87,7 +87,7 @@ function App() {
 
   if (showResults) {
     const isEOG = questionsCount + 1 > questions.length;
-    return <Results {...quiz} isEOG={isEOG} />;
+    return <Results {...quiz} isEOG={isEOG} user={user} />;
   }
   if (isWaiting)
     return <Waiting />;
@@ -109,9 +109,9 @@ const Welcome = ({ name, onInputChange, onSignOut }) => {
     <div className="page">
       <div className="title">Hi {name}</div>
       <input onChange={onInputChange} placeholder="Game PIN" />
-      {/*<a className="admin-button" onClick={onSignOut}>*/}
-      {/*  Sign-out*/}
-      {/*</a>*/}
+      <a className="admin-button sign-out" onClick={onSignOut}>
+        Sign-out
+      </a>
     </div>
   );
 };
@@ -171,7 +171,7 @@ const getTopUsers = (users, questions) => {
     .slice(0, 10);
 }
 
-const Results = ({ activeUsers = [], questions = [], isEOG }) => {
+const Results = ({ activeUsers = [], questions = [], isEOG, user: me }) => {
   const topUsers = getTopUsers(activeUsers, questions)
   const [first, second, third] = topUsers;
 
@@ -183,7 +183,7 @@ const Results = ({ activeUsers = [], questions = [], isEOG }) => {
     <div className="page">
       <div className="title">Top 10:</div>
       {topUsers.map((user = {}) => (
-        <div key={user.key}>
+        <div key={user.key} className={user.key === me.key ? "highlight" : ""}>
           {user.name}: {user.score}
         </div>
       ))}
